@@ -1,27 +1,55 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const saltRounds = 10;
 
 // Register new user
+// const registerUser = async (req, res) => {
+//   const { username, email, password } = req.body;
+//   try {
+//     const userExists = await User.findOne({ username });
+//     if (userExists)
+//       return res.status(400).json({ message: "Usuário Já Existe!" });
+
+//     const widgets = null;
+
+//     const newUser = new User({
+//       username: username,
+//       email: email,
+//       password: password,
+//       widgets: widgets,
+//     });
+//     await newUser.save();
+//     res.status(201).json({ message: "Usuário Cadastrado com Sucesso!" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Erro ao Cadastrar Usuário" });
+//   }
+// };
+
 const registerUser = async (req, res) => {
   const { username, email, password } = req.body;
+
   try {
-    const userExists = await User.findOne({ username });
+    // Verifica se o usuário já existe pelo e-mail
+    const userExists = await User.findOne({ email });
     if (userExists)
-      return res.status(400).json({ message: "Usuário Já Existe!" });
+      return res.status(400).json({ message: "Usuário já existe!" });
 
     const widgets = null;
 
+    // Criação do novo usuário
     const newUser = new User({
-      username: username,
-      email: email,
-      password: password,
+      username,
+      email,
+      password: password, // ← senha segura!
       widgets: widgets,
     });
     await newUser.save();
-    res.status(201).json({ message: "Usuário Cadastrado com Sucesso!" });
+
+    res.status(201).json({ message: "Usuário cadastrado com sucesso!" });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao Cadastrar Usuário" });
+    console.error("Erro ao cadastrar usuário:", error);
+    res.status(500).json({ message: "Erro ao cadastrar usuário" });
   }
 };
 
@@ -84,7 +112,7 @@ const getUserByEmail = async (req, res) => {
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { username, email, password, widgets } = req.body;
-  const passwordEncrypted = bcrypt.hash(password, 10);
+  const passwordEncrypted = bcrypt.hash(password, saltRounds);
 
   try {
     if (
@@ -298,28 +326,57 @@ const deleteUser = async (req, res) => {
 };
 
 // Login user
+// const loginUser = async (req, res) => {
+//   const { email, password } = req.body;
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(400).json({ message: "Dados Inválidos!" });
+
+//     const isMatch = await user.matchPassword(password);
+//     if (!isMatch) return res.status(400).json({ message: "Dados Inválidos!" });
+
+//     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+//       expiresIn: "12h",
+//     });
+//     res.json({
+//       message: "Usuário Autenticado com Sucesso!",
+//       result: {
+//         token,
+//         username: user.username,
+//         widgets: user.widgets,
+//         user_id: user._id
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Erro ao Realizar Login!" });
+//   }
+// };
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Dados Inválidos!" });
+    if (!user) return res.status(400).json({ message: "Dados Inválidos!" }); // Mensagem genética, para que um possível invasor não saiba onde está o erro
 
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Dados Inválidos!" });
+    // Compara a senha digitada com a senha hashada salva
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Dados Inválidos!" }); // Mensagem genética, para que um possível invasor não saiba onde está o erro
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "12h",
     });
+
     res.json({
       message: "Usuário Autenticado com Sucesso!",
       result: {
         token,
         username: user.username,
         widgets: user.widgets,
-        user_id: user._id
+        user_id: user._id,
       },
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Erro ao Realizar Login!" });
   }
 };
