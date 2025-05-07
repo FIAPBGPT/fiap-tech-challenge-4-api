@@ -3,23 +3,23 @@ const swaggerUi = require('swagger-ui-express');
 
 const swaggerOptions = {
   swaggerDefinition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'Bytebank API',
-      version: '1.0.0',
-      description: 'API for Tech Challenge - FIAP | Fase 2',
+      title: "Bytebank API",
+      version: "1.0.0",
+      description: "API for Tech Challenge - FIAP | Fase 4",
     },
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
     },
   },
-  apis: ['src/routes/*.js'], // Path to your route files
+  apis: ["src/routes/*.js"], // Path to your route files
 };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
