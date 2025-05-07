@@ -137,7 +137,7 @@ const importTransactions = async (req, res) => {
             transaction.save();
           });
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       });
 
